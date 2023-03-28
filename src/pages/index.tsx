@@ -2,10 +2,65 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { Inter } from '@next/font/google'
 import styles from '@/styles/Home.module.css'
+import { useEffect, useState } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
 
+const getOnlineStatus = () => {
+  return typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean'
+    ? navigator.onLine
+    : true
+}
+
+const useNavigatorOnLine = () => {
+  const [isOnline, setIsOnline] = useState<boolean>(getOnlineStatus())
+
+  const handleOnline = () => setIsOnline(true)
+
+  const handleOffline = () => setIsOnline(false)
+
+  useEffect(() => {
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+
+  }, [])
+
+  return isOnline
+}
+
 export default function Home() {
+  const [data, setData]= useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  const isOnline = useNavigatorOnLine()
+
+  useEffect(() => {
+    setLoading(true)
+    setTimeout(() => {
+      fetch('https://jsonplaceholder.typicode.com/todos')
+      .then(response => response.json())
+      .then(json => {
+        setData(json)
+        setLoading(false)
+      })
+      .catch(error => {
+        if(isOnline) {
+          setError(error.toString())
+        }else{
+          setError('You are offline')
+        }
+
+      })
+      .finally(() => setLoading(false))
+    }, 2000)
+  }, [])
+
   return (
     <>
       <Head>
@@ -59,21 +114,27 @@ export default function Home() {
           </div>
         </div>
 
-        <div className={styles.grid}>
-          <a
+        {loading && <p>Loading...</p>}
+        {error && <p>{error}</p>}
+        {!loading && !error && <div className={styles.grid}>
+          {data.map((item: any, index) => (
+            <a
             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
             className={styles.card}
+            key={index}
             target="_blank"
             rel="noopener noreferrer"
           >
             <h2 className={inter.className}>
-              Docs <span>-&gt;</span>
+              {item.title} <span>-&gt;</span>
             </h2>
             <p className={inter.className}>
               Find in-depth information about Next.js features and&nbsp;API.
             </p>
           </a>
 
+          
+))}
           <a
             href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
             className={styles.card}
@@ -116,7 +177,7 @@ export default function Home() {
               with&nbsp;Vercel.
             </p>
           </a>
-        </div>
+        </div>}
       </main>
     </>
   )
