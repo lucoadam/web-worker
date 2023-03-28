@@ -42,7 +42,13 @@ export default function Home() {
 
   useEffect(() => {
     setLoading(true)
+
     setTimeout(() => {
+      if(!isOnline) {
+        setError('You are offline')
+        setLoading(false)
+        return
+      }
       fetch('https://jsonplaceholder.typicode.com/todos')
       .then(response => response.json())
       .then(json => {
