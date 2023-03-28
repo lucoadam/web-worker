@@ -34,7 +34,7 @@ const useNavigatorOnLine = () => {
 }
 
 export default function Home() {
-  const [data, setData]= useState([])
+  const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
@@ -44,28 +44,29 @@ export default function Home() {
     setLoading(true)
 
     setTimeout(() => {
-      if(!isOnline) {
+      if (!isOnline) {
         setError('You are offline')
         setLoading(false)
         return
-      }
-      fetch('https://jsonplaceholder.typicode.com/todos')
-      .then(response => response.json())
-      .then(json => {
-        setData(json)
-        setLoading(false)
-      })
-      .catch(error => {
-        if(isOnline) {
-          setError(error.toString())
-        }else{
-          setError('You are offline')
-        }
+      } else {
+        fetch('https://jsonplaceholder.typicode.com/todos')
+          .then(response => response.json())
+          .then(json => {
+            setData(json)
+            setLoading(false)
+          })
+          .catch(error => {
+            if (isOnline) {
+              setError(error.toString())
+            } else {
+              setError('You are offline')
+            }
 
-      })
-      .finally(() => setLoading(false))
+          })
+          .finally(() => setLoading(false))
+      }
     }, 2000)
-  }, [])
+  }, [isOnline])
 
   return (
     <>
@@ -125,22 +126,22 @@ export default function Home() {
         {!loading && !error && <div className={styles.grid}>
           {data.map((item: any, index) => (
             <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            key={index}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              {item.title} <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
+              href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
+              className={styles.card}
+              key={index}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <h2 className={inter.className}>
+                {item.title} <span>-&gt;</span>
+              </h2>
+              <p className={inter.className}>
+                Find in-depth information about Next.js features and&nbsp;API.
+              </p>
+            </a>
 
-          
-))}
+
+          ))}
           <a
             href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
             className={styles.card}
