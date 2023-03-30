@@ -1,8 +1,15 @@
 import Head from 'next/head'
-import Image from 'next/image'
 import { Inter } from '@next/font/google'
 import styles from '@/styles/Home.module.css'
 import { useEffect, useState } from 'react'
+import { Main } from '@/components/Main'
+import {
+  useAddress,
+  useMetamask,
+  useLogin,
+  useLogout,
+  useUser,
+} from "@thirdweb-dev/react";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -19,6 +26,9 @@ const useNavigatorOnLine = () => {
 
   const handleOffline = () => setIsOnline(false)
 
+  
+
+
   useEffect(() => {
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
@@ -34,11 +44,45 @@ const useNavigatorOnLine = () => {
 }
 
 export default function Home() {
+
+  const address = useAddress();
+  const connect = useMetamask();
+  const { login } = useLogin();
+  const { logout } = useLogout();
+  const { user, isLoggedIn } = useUser();
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
   const isOnline = useNavigatorOnLine()
+
+
+  const handleLogin = () => {
+    // All of these fields are optional
+    login({
+      uri: "https://localhost:4000/api/auth",
+      statement: "Please agree to our terms of service!",
+      chainId: "97",
+      nonce: "123",
+      version: "1",
+      resources: ["https://tos.example.com"],
+    })
+  }
+
+  const handleLogout = () => {
+    fetch("http://localhost:4000/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        logout();
+        console.log(res);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -49,6 +93,16 @@ export default function Home() {
         setLoading(false)
         return
       } else {
+        fetch('http://localhost:4000/api', {
+          // credentials: 'include',
+        })
+          .then(response => response.json())
+          .then(json => {
+            console.log(json)
+          })
+          .catch(error => {
+            console.log(error)
+          })
         fetch('https://jsonplaceholder.typicode.com/todos')
           .then(response => response.json())
           .then(json => {
@@ -77,28 +131,24 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={styles.main}>
+        <Main/>
         <div className={styles.description}>
           <p>
             A progressive webApp&nbsp;
             <code className={styles.code}> to check offline load</code>
           </p>
           <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{' '}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
-          </div>
+      {isLoggedIn ? (
+        <button onClick={() => handleLogout()}>Logout</button>
+      ) : address ? (
+        <button onClick={() => handleLogin()}>Login</button>
+      ) : (
+        <button onClick={() => connect()}>Connect</button>
+      )}
+
+      <pre>Connected Wallet: {address}</pre>
+      <pre>User: {user ? user.data : "N/A"}</pre>
+    </div>
         </div>
         {loading && <p>Loading...</p>}
         {error && <p>{error}</p>}
